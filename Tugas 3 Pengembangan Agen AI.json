@@ -1,0 +1,156 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hai Sobat!\nNama ku Jeckjoo... ada yang bisa saya bantu?",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "48490f37-f008-4ed9-8a4e-562667f516f2",
+      "name": "When chat message received",
+      "webhookId": "096d248a-3393-41c9-967d-a02f434e91d8"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "Kamu adalah Konsultan Program Pendidikan dari NFA. Tugasmu adalah memberikan informasi lengkap mengenai pelatihan Bootcamp dan Skill Up berdasarkan data yang tersedia."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "c2426a91-6fa0-4eb0-9ad6-cc692a413557",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        96,
+        240
+      ],
+      "id": "5e5eac7b-b061-49fa-b312-c23aaec36ba7",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "WbOB1GEKoLQ1IKgu",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        288
+      ],
+      "id": "da1878e7-31ba-4be6-9715-a12cbb781fb4",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "https://docs.google.com/spreadsheets/d/1ZBE3eOugPtjvJjIHIQOAL_DpemHDMBbiNG7VbO7v6_Q/edit?usp=sharing",
+          "mode": "url"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1841984313,
+          "mode": "list",
+          "cachedResultName": "Detail Program Pelatihan NFA",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ZBE3eOugPtjvJjIHIQOAL_DpemHDMBbiNG7VbO7v6_Q/edit#gid=1841984313"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTool",
+      "typeVersion": 4.7,
+      "position": [
+        448,
+        272
+      ],
+      "id": "b801ec62-1dc8-448c-bea4-7cc64be309ea",
+      "name": "FAQ",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "KNmQxNPQ68ELCZxR",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "FAQ": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "e0042c4a-0b22-476d-af12-8e3ed6767545",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bc7f0c6ec9ef097a38a47a47954dada235847cf8f8b7b37db8c2cf52c145d765"
+  },
+  "id": "QqenPFPmI17E8mj7",
+  "tags": []
+}
