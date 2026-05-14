@@ -1,0 +1,295 @@
+{
+  "name": "Schedule Sheet Otomatis",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        -208
+      ],
+      "id": "5e2258ac-431f-4233-96e6-880c8599de5f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1ylxJInDgbJZ0JWBdE3Wg8QX3pFqjOw57CKMl3a32CvM",
+          "mode": "list",
+          "cachedResultName": "Auto Posting Schedule",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ylxJInDgbJZ0JWBdE3Wg8QX3pFqjOw57CKMl3a32CvM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ylxJInDgbJZ0JWBdE3Wg8QX3pFqjOw57CKMl3a32CvM/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        496,
+        -208
+      ],
+      "id": "f8d99de2-0304-4a3a-a737-1bca1463fd11",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hUZr3RPBVGb9uV1V",
+          "name": "Google Sheets account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Pastikan library luxon sudah aktif\nconst items = $input.all();\nconst now = DateTime.now().setZone('Asia/Jakarta'); \nconst postsToSend = [];\n\nfor (const item of items) {\n    const row = item.json;\n    \n    const dateStr = row['Scheduled Date']; \n    const timeStr = row['Scheduled Time']; \n    // Pakai trim() dan default value buat jaga-jaga kalau kolom status kosong/ada spasi\n    const status = (row['Status'] || '').trim();\n\n    // 1. Validasi: Di sini gue hapus syarat 'Pending' sementara supaya lo bisa test dulu.\n    // Kalau mau dipake lagi, ganti jadi: if (status.toLowerCase() === 'pending' && dateStr && timeStr)\n    if (dateStr && timeStr) {\n        \n        let scheduledTime;\n\n        if (dateStr.includes('/')) {\n            const dateTimeString = `${dateStr} ${timeStr}`;\n            // PENTING: Pakai 'd/M/yyyy H:m:s' supaya fleksibel (bisa 9:30 atau 09:30)\n            scheduledTime = DateTime.fromFormat(dateTimeString, 'd/M/yyyy H:m:s', { zone: 'Asia/Jakarta' });\n        } else {\n            const dateTimeString = `${dateStr}T${timeStr}`;\n            scheduledTime = DateTime.fromISO(dateTimeString, { zone: 'Asia/Jakarta' });\n        }\n\n        // 2. Debugging: Cek apakah waktu valid dan bandingkan dengan 'now'\n        if (scheduledTime.isValid) {\n            // Jika tanggal di sheet (11/02/2026) lebih besar dari 'now' (Mei 2026), \n            // maka data TIDAK AKAN keluar.\n            if (scheduledTime <= now) {\n                postsToSend.push(item);\n            }\n        }\n    }\n}\n\nreturn postsToSend;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        -208
+      ],
+      "id": "7541fee2-9094-43b9-a2b2-68eb43595f99",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "chatId": "1170940223",
+        "text": "={{ $json.Content }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        912,
+        -208
+      ],
+      "id": "5bfcd063-1e0e-482b-982a-6275c50ad587",
+      "name": "Send a text message",
+      "webhookId": "a4f6baa8-a035-47d2-b755-ddc143b27fea",
+      "credentials": {
+        "telegramApi": {
+          "id": "J9U6iL17qvMCxYE9",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f25e7113-1e41-49b3-a111-2f0a39ae2041",
+              "name": "row_number",
+              "value": "={{ $('Code in JavaScript').item.json.row_number }}",
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        -208
+      ],
+      "id": "f55a17be-843b-4c15-b235-aec7e58e59c7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1ylxJInDgbJZ0JWBdE3Wg8QX3pFqjOw57CKMl3a32CvM",
+          "mode": "list",
+          "cachedResultName": "Auto Posting Schedule",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ylxJInDgbJZ0JWBdE3Wg8QX3pFqjOw57CKMl3a32CvM/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1ylxJInDgbJZ0JWBdE3Wg8QX3pFqjOw57CKMl3a32CvM/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $('Code in JavaScript').item.json.ID }}",
+            "Status": "Published"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Content",
+              "displayName": "Content",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Scheduled Date",
+              "displayName": "Scheduled Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Scheduled Time",
+              "displayName": "Scheduled Time",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1328,
+        -208
+      ],
+      "id": "b9582e58-d370-4c88-a81c-6887fc72d328",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "hUZr3RPBVGb9uV1V",
+          "name": "Google Sheets account 2"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "1429a818-e7ca-4bbf-b5ba-fcd811c4a334",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bc7f0c6ec9ef097a38a47a47954dada235847cf8f8b7b37db8c2cf52c145d765"
+  },
+  "id": "o4jtE89SX7Nhb9xq",
+  "tags": []
+}
